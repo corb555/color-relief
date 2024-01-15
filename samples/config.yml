@@ -1,0 +1,5 @@
+settings:
+  region: GC
+GC:
+  DEM: USGS_13_n3*20230418.tif
+
