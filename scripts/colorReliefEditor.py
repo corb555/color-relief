@@ -50,7 +50,10 @@ class ColorReliefEditor(QWidget):
         self.setLayout(main_pane)
 
     def read_rgb_values(self):
-        """Read RGB values from the file and return as a list."""
+        """
+        Read RGB values from the file and return as a list.
+        Each line has elevation, R, G, B, A (optional)
+        """
         if not os.path.exists(self.filename):
             raise FileNotFoundError(f"File {os.path.abspath(self.filename)} not found.")
 
@@ -212,7 +215,7 @@ class ViewSample(QWidget):
 
     def calculate_draw_params(self):
         draw_params = []  # List to store parameters for drawRect
-        # Determine minimum negative value and offset all values to be positive
+        # Determine minimum negative value and then offset all values to be positive
         min_y = min(self.data, key=lambda x: x[0])[0]
         self.offset = -min_y if min_y < 0 else 0
         # Offset the y-values to make all of them positive
@@ -277,7 +280,8 @@ def main():
         sys.exit(0)
 
     window = ColorReliefEditor(selected_file)
-    window.setWindowTitle("Color Relief Table Editor")
+    pwd = os.path.basename(os.getcwd())
+    window.setWindowTitle(f"Color Relief Editor - {pwd}")
     window.show()
     sys.exit(app.exec_())
 

@@ -31,11 +31,12 @@ merge_files() {
     wait
 
     # Merge the separate bands back into a single RGB file
-    echo "Merging bands"
-    gdal_merge.py -separate -o "$output_file" "${temp_files[@]}"
+    echo "Merging bands into $output_file"
+    echo input: "${temp_files[@]}"
+    gdal_merge.py -v -separate -o "$output_file" "${temp_files[@]}"
 
     # Clean up temporary files
-    rm -f "${temp_files[@]}"
+    # rm -f "${temp_files[@]}"
 }
 
 # Function to run gdal_calc.py with status update for specified band
@@ -46,12 +47,14 @@ run_gdal_calc() {
         --A_band="$band" --B_band=1  \
         --calc="$calculation1" \
         --outfile="$output_file" --extent=intersect --projectionCheck \
-        --NoDataValue=0 --co="COMPRESS=DEFLATE" --type=Byte --overwrite
+        --NoDataValue=0 --co="COMPRESS=DEFLATE" --type=Byte --overwrite || exit $?
 }
 
-
-echo "--------------------"
+set -e
+echo
+echo "------- $(basename $0) -------------"
 pwd
+
 # Read the region prefix from the YAML config file using yq
 prefix=$(yq eval '.settings.region' config.yml)
 

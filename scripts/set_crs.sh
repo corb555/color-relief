@@ -1,7 +1,12 @@
 #!/bin/sh
-
-echo "-------WARNING verify FILE -------------"
+set -e
+echo
+echo "------- $(basename $0) -------------"
 pwd
-echo gdalwarp Set CRS to 3857.  Use "$1".tif to create "$1".crs.tif
-gdalwarp   -t_srs epsg:3857 -overwrite -r lanczos -co "COMPRESS=LZW"  "$1".tif "$1".crs.tif
-echo DONE
+
+# Read the region prefix from the config.yml file using yq
+region=$(yq eval '.settings.region' config.yml)
+echo gdalwarp Set CRS to 3857.  Use "$region"_arid_relief.tif to create "$region"_relief.crs.tif
+gdalwarp   -t_srs epsg:3857 -overwrite -r lanczos -co "COMPRESS=LZW"  "$region"_arid_relief.tif "$region"_relief.crs.tif || exit $?
+
+echo "DONE"

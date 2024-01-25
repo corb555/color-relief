@@ -15,7 +15,7 @@ merge_files() {
 
     local in_file1="$prefix"_cool_relief.tif
     local in_file2="$prefix"_arid_relief.tif
-    precip_rgb_file="$prefix"_precip_rgb.tif
+    precip_rgb_file="$prefix"_precip_ext.tif
 
     echo "Merge $in_file1 $in_file2 into $output_file" using mask $precip_rgb_file
 
@@ -31,11 +31,11 @@ merge_files() {
     wait
 
     # Merge the separate bands back into a single RGB file
-    echo "Merging bands"
-    gdal_merge.py -separate -o "$output_file" "${temp_files[@]}"
+    echo "Merging Bands into $output_file"
+    gdal_merge.py -separate -o "$output_file" "${temp_files[@]}" || exit $?
 
     # Clean up temporary files
-    rm -f "${temp_files[@]}"
+    # rm -f "${temp_files[@]}"
 }
 
 # Define the --calc argument
@@ -51,11 +51,11 @@ run_gdal_calc() {
         --A_band=$band --B_band=$band --M_band=1 \
         --calc="numpy.where(M > 50, $calculation1, $calculation2)" \
         --outfile="$output_file" --extent=intersect --projectionCheck \
-        --NoDataValue=0 --co="COMPRESS=DEFLATE" --type=Byte --overwrite
+        --NoDataValue=0 --co="COMPRESS=DEFLATE" --type=Byte --overwrite || exit $?
 }
 
-
-echo "--------------------"
+set -e
+echo "------ merge_arid.sh --------------"
 pwd
 # Read the region prefix from the YAML config file using yq
 prefix=$(yq eval '.settings.region' config.yml)
@@ -66,4 +66,5 @@ start_time=$(date +"%s")
 merge_files
 
 elapsed_time
-echo "Done"
+
+echo "DONE"
