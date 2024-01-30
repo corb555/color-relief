@@ -4,9 +4,9 @@
 
 ### Instructions
 
-create config.yml  
-copy SAMPLE_arid_color_ramp.txt to **region**_arid_color_ramp.txt  
-run colorReliefEditor to set color by elevation  
+create config.yml  -  xmin ymin must be origin  
+copy SAMPLE_arid_color_ramp.txt to **region**_arid_color_ramp.txt and same for cool  
+run colorReliefEditor and adjust color by elevation  
 
 make  **region**_relief.crs.tif  
 copy **region**_relief.crs.tif  to your img folder
@@ -17,5 +17,4 @@ Add as a layer in project.mml:
     Datasource:  
       type: raster  
       file: "img/TETON_relief.crs.tif"`
-
 

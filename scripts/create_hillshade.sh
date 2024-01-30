@@ -1,24 +1,25 @@
 #!/bin/sh
-set -e
-echo
-echo "------- $(basename $0) -------------"
-pwd
+# Use the directory of the currently executing script for utils.sh
+. "$(dirname "$(readlink -f "$0")")/utils.sh"
+# Display script info, get $region and config file
+init "$@"
 
-# Read the region prefix from the YAML config file using yq
-prefix=$(yq eval '.settings.region' config.yml)
-
-# Generate input and output file names using the prefix
-input_file="$prefix"_DEM.tif
-output_file="$prefix"_hillshade.tif
-
-# Print information about the operation
-echo "Hillshade $input_file $output_file"
-
-# todo fix this so if statement isnt needed.  this is to handle horizontal vs vertical units in DEM
-if [ "$prefix" = "GEYSER" ]; then
-      # Run the second gdaldem statement
-    gdaldem hillshade -compute_edges -of GTiff -z 5 "$input_file" "$output_file" -igor || exit $?
-else
-    # Run the first gdaldem statement
-    gdaldem hillshade -compute_edges -of GTiff -z 5 -s 111120 "$input_file" "$output_file" -igor || exit $?
+# Get flags for hillshade from YML file
+flags=$(yq eval ".regions.$region.HILLSHADE" $config)
+# Check if the hillshade flags are missing or empty
+if [ -z "$flags" ] || [ "$flags" = "null" ]; then
+    echo "Error: HILLSHADE flags not found for region '$region' in the configuration."
+    exit 1
 fi
+
+# Create input and output file names using the region
+input_file="$region"_DEM.tif
+output_file="$region"_hillshade.tif
+# Check if the  file exists
+[ -f "$input_file" ] || { echo "Error: Configuration file not found $input_file"; exit 1; }
+
+#   -z 5 -s 111120 -igor
+echo gdaldem hillshade -compute_edges -of GTiff $flags "$input_file" "$output_file"  || exit $?
+
+# Run  gdaldem hillshade
+gdaldem hillshade -compute_edges -of GTiff $flags "$input_file" "$output_file"  || exit $?

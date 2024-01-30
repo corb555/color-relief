@@ -1,21 +1,16 @@
 #!/bin/bash
 
-# Function to calculate and print elapsed time
-elapsed_time() {
-    end_time=$(date +"%s")
-    elapsed_time=$((end_time - start_time))
-    minutes=$((elapsed_time / 60))
-    seconds=$((elapsed_time % 60))
-    echo "Elapsed time $minutes minutes and $seconds s."
-}
-
 # Function to merge files and clean up
 merge_files() {
     local style=$1
-    local output_file="$prefix"_"$style"_relief.tif
+    local output_file="$region"_"$style"_relief.tif
+    local in_file1="$region"_"$style"_color.tif
+    local in_file2="$region"_hillshade.tif
 
-    local in_file1="$prefix"_"$style"_color.tif
-    local in_file2="$prefix"_hillshade.tif
+    # Check if the  file exists
+    for file in "$in_file1" "$in_file2"; do
+        [ -f "$file" ] || { echo "Error: File not found at $file"; exit 1; }
+    done
 
     echo "Merge $in_file1 $in_file2 into $output_file"
 
@@ -33,10 +28,10 @@ merge_files() {
     # Merge the separate bands back into a single RGB file
     echo "Merging bands into $output_file"
     echo input: "${temp_files[@]}"
-    gdal_merge.py -v -separate -o "$output_file" "${temp_files[@]}"
+    gdal_merge.py -v -separate -o "$output_file" "${temp_files[@]}" || exit $?
 
     # Clean up temporary files
-    # rm -f "${temp_files[@]}"
+    rm -f "${temp_files[@]}"
 }
 
 # Function to run gdal_calc.py with status update for specified band
@@ -50,16 +45,10 @@ run_gdal_calc() {
         --NoDataValue=0 --co="COMPRESS=DEFLATE" --type=Byte --overwrite || exit $?
 }
 
-set -e
-echo
-echo "------- $(basename $0) -------------"
-pwd
 
-# Read the region prefix from the YAML config file using yq
-prefix=$(yq eval '.settings.region' config.yml)
-
-# Record the start time
-start_time=$(date +"%s")
+# Use the directory of the currently executing script for utils.sh
+. "$(dirname "$(readlink -f "$0")")/utils.sh"
+init "$@"
 
 # Define the --calc argument
 calculation1="(A.astype(float)*B.astype(float))/255.0"
@@ -69,5 +58,4 @@ for style in "arid" "cool"; do
 done
 
 elapsed_time
-
 echo "Done"
